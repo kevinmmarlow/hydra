@@ -8,7 +8,7 @@
  */
 
 import { execFile } from 'child_process'
-import { existsSync, readFileSync, writeFileSync } from 'fs'
+import { existsSync, readFileSync, writeFileSync, symlinkSync, renameSync, rmSync } from 'fs'
 import { join } from 'path'
 
 const PLUGIN_VERSION = '0.0.4'
@@ -130,4 +130,19 @@ export async function ensureBridgeReady(targetDir: string, install: InstallRunne
     }
   }
   return installed
+}
+
+/**
+ * Point a plugin-cache dir's server.ts at the repo's bridge.ts.
+ *
+ * A link, not a copy: bridge.ts imports ./shared/* relative to itself, and a copy
+ * resolves those against the cache dir, where they don't exist. Swapped in by
+ * rename so a session spawning mid-boot never finds server.ts missing.
+ */
+export function linkBridge(bridgeSrc: string, targetDir: string): void {
+  const dest = join(targetDir, 'server.ts')
+  const tmp = `${dest}.${process.pid}.tmp`
+  rmSync(tmp, { force: true })
+  symlinkSync(bridgeSrc, tmp)
+  renameSync(tmp, dest)
 }

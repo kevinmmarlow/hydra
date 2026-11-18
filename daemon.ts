@@ -9,7 +9,7 @@
  */
 
 import { join } from 'path'
-import { copyFileSync, readFileSync, writeFileSync, readdirSync, unlinkSync, mkdirSync, existsSync } from 'fs'
+import { readFileSync, writeFileSync, readdirSync, unlinkSync, mkdirSync, existsSync } from 'fs'
 import { connect } from 'net'
 
 // ---------------------------------------------------------------------------
@@ -38,7 +38,7 @@ process.on('exit', () => { try { unlinkSync(PID_FILE) } catch {} })
 
 import { gateway, TOKEN, PLATFORM, STATE_DIR, CLAUDE_CONFIG, SOCK_PATH, heartbeatPath } from './daemon/config.js'
 import { syncMods } from './shared/mods.js'
-import { PLUGIN_MANIFEST, MCP_CONFIG, ensureBridgeReady } from './daemon/plugin-manifest.js'
+import { PLUGIN_MANIFEST, MCP_CONFIG, ensureBridgeReady, linkBridge } from './daemon/plugin-manifest.js'
 import { registry, threadRegistry, sessionEmoji, reattachAdapters } from './daemon/sessions.js'
 import { engines, resolveEngine } from './daemon/engines/instances.js'
 import { engineRecords } from './daemon/engines/boot.js'
@@ -262,7 +262,7 @@ try {
   const versionDirs = readdirSync(discordCache, { withFileTypes: true }).filter(d => d.isDirectory())
   for (const d of versionDirs) {
     const targetDir = join(discordCache, d.name)
-    copyFileSync(bridgeSrc, join(targetDir, 'server.ts'))
+    linkBridge(bridgeSrc, targetDir)
     writeFileSync(join(targetDir, `daemon-${PLATFORM}.json`), daemonConfig)
     writeFileSync(join(targetDir, '.mcp.json'), MCP_CONFIG)
     mkdirSync(join(targetDir, '.claude-plugin'), { recursive: true })
